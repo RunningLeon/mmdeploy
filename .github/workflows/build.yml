@@ -91,9 +91,8 @@ jobs:
           rm -rf .eggs && python -m pip install -e .
       - name: Check Environment
         run: |
-          python -c 'import torch;print(torch.cuda.is_available())'
-          python -c 'from mmdet.utils.collect_env import collect_env; print(collect_env())'
-          python tools/check_env.py
+          python -c 'import torch;print(torch.cuda.is_available(), torch.__version__)'
+          python -c 'import mmcv; print(mmcv.collect_env())'
       - name: Run unittests and generate coverage report
         run: |
           coverage run --branch --source mmdeploy -m pytest -rsE tests/
