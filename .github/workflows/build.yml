@@ -92,6 +92,7 @@ jobs:
       - name: Check Environment
         run: |
           python -c 'import torch;print(torch.cuda.is_available())'
+          python -c 'from mmdet.utils.collect_env import collect_env; print(collect_env())'
           python tools/check_env.py
       - name: Run unittests and generate coverage report
         run: |
