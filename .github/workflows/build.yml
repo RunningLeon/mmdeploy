@@ -45,7 +45,7 @@ jobs:
           python -c 'import mmcv; print(mmcv.__version__)'
       - name: Install unittest dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements.txt --use-deprecated=legacy-resolver
           pip install -U numpy
       - name: Build and install
         run: rm -rf .eggs && pip install -e .
@@ -87,7 +87,7 @@ jobs:
         run: |
           python -V
           python -m pip install mmcv-full==${{matrix.mmcv}} -f https://download.openmmlab.com/mmcv/dist/cu102/${{matrix.torch_version}}/index.html
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements.txt --use-deprecated=legacy-resolver
           python -m pip install -U numpy
       - name: Build and install
         run: |
@@ -131,7 +131,7 @@ jobs:
         run: |
           python -V
           python -m pip install mmcv-full==${{matrix.mmcv}} -f https://download.openmmlab.com/mmcv/dist/cu111/${{matrix.torch_version}}/index.html
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements.txt --use-deprecated=legacy-resolver
           python -m pip install -U numpy
       - name: Build and install
         run: |
