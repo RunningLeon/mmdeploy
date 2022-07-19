@@ -5,3 +5,5 @@ include mmdeploy/backend/ncnn/*.pyd
 include mmdeploy/lib/*.so
 include mmdeploy/lib/*.dll
 include mmdeploy/lib/*.pyd
+recursive-include mmdeploy/.mim/tools *.sh *.py
+recursive-include mmdet/.mim/configs *.py *.yml

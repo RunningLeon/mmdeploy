@@ -152,3 +152,6 @@ bin/
 mmdeploy/backend/ncnn/onnx2ncnn
 
 /mmdeploy-*
+
+#mim
+.mim/
