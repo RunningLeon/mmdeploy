@@ -126,7 +126,7 @@ do
         --backends onnxruntime tensorrt ncnn torchscript openvino \
         --performance \
         2>&1 | tee ${log_path}
-    elapsed_per_torch=$((SECONDS - start_time_per_torch)))
+    elapsed_per_torch=$((SECONDS - start_time_per_torch))
     echo "Finish with torch=${TORCH_VERSION}"
     eval "echo Elapsed time: $(date -ud "@$elapsed_per_torch" +'$((%s/3600/24)) days %H hr %M min %S sec')"
 done
