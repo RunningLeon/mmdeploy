@@ -54,9 +54,6 @@ export ONNXRUNTIME_DIR/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH/\/root\/workspace\/libtorch\/lib:/}
 export ONNXRUNTIME_VERSION=1.8.1
 
-## avoid dataloader OOM error of too many workers
-sed -i 's/workers_per_gpu=model_cfg.data.workers_per_gpu/workers_per_gpu=1/g' $MMDEPLOY_DIR/tools/test.py
-
 echo "time-$(date +%Y%m%d%H%M)"
 export MMDEPLOY_DIR=/root/workspace/mmdeploy
 export MMENGIINE_DIR=/root/workspace/mmengine
@@ -64,9 +61,12 @@ export MMCV_DIR=/root/workspace/mmcv
 export CODEBASE_DIR=/root/workspace/${codebase_fullname}
 git clone --depth 1 https://github.com/open-mmlab/mmengine.git $MMENGIINE_DIR
 git clone --depth 1 --branch 2.x https://github.com/open-mmlab/mmcv.git $MMCV_DIR
-git clone --depth 1 --branch $branch_name $ https://github.com/open-mmlab/${codebase_fullname}.git ${CODEBASE_DIR}
+git clone --depth 1 --branch $branch_name https://github.com/open-mmlab/${codebase_fullname}.git ${CODEBASE_DIR}
 
-## build mmdeploy
+## avoid dataloader OOM error of too many workers
+sed -i 's/workers_per_gpu=model_cfg.data.workers_per_gpu/workers_per_gpu=1/g' $MMDEPLOY_DIR/tools/test.py
+
+## soft lint to the data directory
 ln -s /root/workspace/mmdeploy_benchmark $MMDEPLOY_DIR/data
 
 for TORCH_VERSION in 1.8.1 1.9.0 1.10.0 1.11.0 1.12.0
@@ -118,7 +118,8 @@ do
         --performance \
         2>&1 | tee ${log_path}
     elapsed_per_torch=$((SECONDS - start_time_per_torch)))
-    eval "echo Elapsed($TORCH_VERSION): $(date -ud "@$elapsed_per_torch" +'$((%s/3600/24)) days %H hr %M min %S sec')"
+    echo "Finish with torch=${TORCH_VERSION}"
+    eval "echo Elapsed time: $(date -ud "@$elapsed_per_torch" +'$((%s/3600/24)) days %H hr %M min %S sec')"
 done
 
 echo "time-$(date +%Y%m%d%H%M)"
