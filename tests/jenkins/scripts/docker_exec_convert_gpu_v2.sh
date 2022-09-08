@@ -48,8 +48,6 @@ export codebase=$1
 getFullName $codebase
 getBranchName $codebase
 
-export MMDEPLOY_DIR=/root/workspace/mmdeploy
-
 #### TODO: to be removed
 export ONNXRUNTIME_DIR=/root/workspace/onnxruntime-linux-x64-1.8.1
 export ONNXRUNTIME_DIR/lib:$LD_LIBRARY_PATH
@@ -60,13 +58,13 @@ export ONNXRUNTIME_VERSION=1.8.1
 sed -i 's/workers_per_gpu=model_cfg.data.workers_per_gpu/workers_per_gpu=1/g' $MMDEPLOY_DIR/tools/test.py
 
 echo "time-$(date +%Y%m%d%H%M)"
+export MMDEPLOY_DIR=/root/workspace/mmdeploy
 export MMENGIINE_DIR=/root/workspace/mmengine
 export MMCV_DIR=/root/workspace/mmcv
+export CODEBASE_DIR=/root/workspace/${codebase_fullname}
 git clone --depth 1 https://github.com/open-mmlab/mmengine.git $MMENGIINE_DIR
 git clone --depth 1 --branch 2.x https://github.com/open-mmlab/mmcv.git $MMCV_DIR
-
-## clone ${codebase}
-git clone --depth 1 --branch $branch_name $ https://github.com/open-mmlab/${codebase_fullname}.git /root/workspace/${codebase_fullname}
+git clone --depth 1 --branch $branch_name $ https://github.com/open-mmlab/${codebase_fullname}.git ${CODEBASE_DIR}
 
 ## build mmdeploy
 ln -s /root/workspace/mmdeploy_benchmark $MMDEPLOY_DIR/data
@@ -78,7 +76,7 @@ do
     # install mmengine mmcv codebase
     pip install -v $MMENGIINE_DIR
     MMCV_WITH_OPS=1 pip install -v $MMCV_DIR
-    pip install -v /root/workspace/${codebase_fullname}
+    pip install -v $CODEBASE_DIR
 
     # export libtorch cmake dir, ran example: /opt/conda/envs/torch1.11.0/lib/python3.8/site-packages/torch/share/cmake/Torch
     export Torch_DIR=$(python -c "import torch;print(torch.utils.cmake_prefix_path + '/Torch')")

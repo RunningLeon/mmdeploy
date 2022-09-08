@@ -5,6 +5,9 @@
 docker_image=$1
 codebase_list=($2)
 max_job_nums=${3:-'4'}
+mmdeploy_branch=${4:-'master'}
+repo_url=${5:-'https://github.com/open-mmlab/mmdeploy.git'}
+script_version=${6:-''}
 
 date_snap=$(date +%Y%m%d)
 time_snap=$(date +%Y%m%d%H%M)
@@ -25,7 +28,7 @@ done
 for codebase in ${codebase_list[@]}
 do
     read -u1000
-    { 
+    {
         container_name=convert-${codebase}-${time_snap}
         container_id=$(
             docker run -itd \
@@ -38,9 +41,9 @@ do
                 ${docker_image} /bin/bash
         )
         echo "container_id=${container_id}"
-        nohup docker exec ${container_id} bash -c "git clone --depth 1 --branch master --recursive https://github.com/open-mmlab/mmdeploy.git &&\
-        /root/workspace/mmdeploy_script/docker_exec_convert_gpu.sh ${codebase}" > ${log_dir}/${codebase}.log 2>&1 &
-        wait 
+        nohup docker exec ${container_id} bash -c "git clone --depth 1 --branch ${mmdeploy_branch} --recursive ${repo_url} &&\
+        /root/workspace/mmdeploy_script/docker_exec_convert_gpu${script_version}.sh ${codebase}" > ${log_dir}/${codebase}.log 2>&1 &
+        wait
         docker stop $container_id
         echo "${codebase} convert finish!"
         cat ${log_dir}/${codebase}.log
@@ -48,6 +51,6 @@ do
     }&
 done
 
-wait 
+wait
 exec 1000>&-
 exec 1000<&-
