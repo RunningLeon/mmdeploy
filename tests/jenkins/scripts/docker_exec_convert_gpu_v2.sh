@@ -64,7 +64,7 @@ getCodebaseInfo $codebase
 
 #### TODO: to be removed
 export ONNXRUNTIME_DIR=/root/workspace/onnxruntime-linux-x64-1.8.1
-export ONNXRUNTIME_DIR/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=ONNXRUNTIME_DIR/lib:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH/\/root\/workspace\/libtorch\/lib:/}
 export ONNXRUNTIME_VERSION=1.8.1
 
