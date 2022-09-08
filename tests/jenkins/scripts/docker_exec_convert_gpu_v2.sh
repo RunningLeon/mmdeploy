@@ -17,36 +17,50 @@ fi
 unset __conda_setup
 
 ## func
-function getFullName() {
+function getCodebaseInfo() {
     local codebase_=$1
+    # created vars
     codebase_fullname=""
-    if [ "$codebase_" = "mmdet" ]; then codebase_fullname="mmdetection"; fi
-    if [ "$codebase_" = "mmcls" ]; then codebase_fullname="mmclassification"; fi
-    if [ "$codebase_" = "mmdet3d" ]; then codebase_fullname="mmdetection3d"; fi
-    if [ "$codebase_" = "mmedit" ]; then codebase_fullname="mmediting"; fi
-    if [ "$codebase_" = "mmocr" ]; then codebase_fullname="mmocr"; fi
-    if [ "$codebase_" = "mmpose" ]; then codebase_fullname="mmpose"; fi
-    if [ "$codebase_" = "mmrotate" ]; then codebase_fullname="mmrotate"; fi
-    if [ "$codebase_" = "mmseg" ]; then codebase_fullname="mmsegmentation"; fi
+    branch_name="1.x"
+    codebase_version=""
+
+    if [ "$codebase_" = "mmdet" ]; then
+      codebase_fullname="mmdetection"
+      branch_name="3.x"
+      codebase_version="mmdet>=3.0.0rc0"
+    elif [ "$codebase_" = "mmcls" ]; then
+      codebase_fullname="mmclassification"
+      codebase_version="mmcls>=1.0.0rc0"
+    elif [ "$codebase_" = "mmdet3d" ]; then
+      codebase_fullname="mmdetection3d"
+      branch_name="dev-1.x"
+      codebase_version="mmdet3d>=1.1.0rc0"
+    elif [ "$codebase_" = "mmedit" ]; then
+      codebase_fullname="mmediting"
+      codebase_version="mmedit>=1.0.0rc0"
+    elif [ "$codebase_" = "mmocr" ]; then
+      codebase_fullname="mmocr"
+      codebase_version="mmocr>=1.0.0rc0"
+    elif [ "$codebase_" = "mmpose" ]; then
+      codebase_fullname="mmpose"
+      codebase_version="mmpose>=1.0.0b0"
+    elif [ "$codebase_" = "mmrotate" ]; then
+      codebase_fullname="mmrotate"
+      branch_name="dev-1.x"
+      codebase_version="mmrotate>=1.0.0rc0"
+    elif [ "$codebase_" = "mmseg" ]; then
+      codebase_fullname="mmsegmentation"
+      codebase_version="mmsegmentation>=1.0.0rc0"
+    else
+      echo "Incorrect codebase=${codebase_}"
+      return 1
+    fi
 }
 
-function getBranchName() {
-    local codebase_=$1
-    branch_name=""
-    if [ "$codebase_" = "mmdet" ]; then branch_name="3.x"; fi
-    if [ "$codebase_" = "mmcls" ]; then branch_name="1.x"; fi
-    if [ "$codebase_" = "mmdet3d" ]; then branch_name="dev-1.x"; fi
-    if [ "$codebase_" = "mmedit" ]; then branch_name="1.x"; fi
-    if [ "$codebase_" = "mmocr" ]; then branch_name="1.x"; fi
-    if [ "$codebase_" = "mmpose" ]; then branch_name="1.x"; fi
-    if [ "$codebase_" = "mmrotate" ]; then branch_name="dev-1.x"; fi
-    if [ "$codebase_" = "mmseg" ]; then branch_name="1.x"; fi
-}
 
 ## parameters
 export codebase=$1
-getFullName $codebase
-getBranchName $codebase
+getCodebaseInfo $codebase
 
 #### TODO: to be removed
 export ONNXRUNTIME_DIR=/root/workspace/onnxruntime-linux-x64-1.8.1
@@ -56,11 +70,7 @@ export ONNXRUNTIME_VERSION=1.8.1
 
 echo "time-$(date +%Y%m%d%H%M)"
 export MMDEPLOY_DIR=/root/workspace/mmdeploy
-export MMENGIINE_DIR=/root/workspace/mmengine
-export MMCV_DIR=/root/workspace/mmcv
 export CODEBASE_DIR=/root/workspace/${codebase_fullname}
-git clone --depth 1 https://github.com/open-mmlab/mmengine.git $MMENGIINE_DIR
-git clone --depth 1 --branch 2.x https://github.com/open-mmlab/mmcv.git $MMCV_DIR
 git clone --depth 1 --branch $branch_name https://github.com/open-mmlab/${codebase_fullname}.git ${CODEBASE_DIR}
 
 ## avoid dataloader OOM error of too many workers
@@ -69,15 +79,10 @@ sed -i 's/workers_per_gpu=model_cfg.data.workers_per_gpu/workers_per_gpu=1/g' $M
 ## soft lint to the data directory
 ln -s /root/workspace/mmdeploy_benchmark $MMDEPLOY_DIR/data
 
-for TORCH_VERSION in 1.8.1 1.9.0 1.10.0 1.11.0 1.12.0
+for TORCH_VERSION in 1.10.0
 do
     start_time_per_torch=$SECONDS
     conda activate torch${TORCH_VERSION}
-    # install mmengine mmcv codebase
-    pip install -v $MMENGIINE_DIR
-    MMCV_WITH_OPS=1 pip install -v $MMCV_DIR
-    pip install -v $CODEBASE_DIR
-
     # export libtorch cmake dir, ran example: /opt/conda/envs/torch1.11.0/lib/python3.8/site-packages/torch/share/cmake/Torch
     export Torch_DIR=$(python -c "import torch;print(torch.utils.cmake_prefix_path + '/Torch')")
     # need to build for each env
@@ -100,10 +105,14 @@ do
     make -j $(nproc)
     make install && cd $MMDEPLOY_DIR
 
-    pip install -r requirements/tests.txt
-    pip install -r requirements/runtime.txt
-    pip install -r requirements/build.txt
-    pip install -v .
+    # install codebase
+    pip install openmim
+    mim install $codebase_version
+
+    pip install -r $MMDEPLOY_DIR/requirements/tests.txt
+    pip install -r $MMDEPLOY_DIR/requirements/runtime.txt
+    pip install -r $MMDEPLOY_DIR/requirements/build.txt
+    pip install -v $MMDEPLOY_DIR
 
     ## start regression
     log_dir=/root/workspace/mmdeploy_regression_working_dir/${codebase}/torch${TORCH_VERSION}
