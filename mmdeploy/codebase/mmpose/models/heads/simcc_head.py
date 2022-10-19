@@ -19,5 +19,4 @@ def simcc_head__predict(ctx, self, feats, batch_data_samples, test_cfg=None):
         output_heatmap (torch.Tensor): Output heatmaps.
     """
     simcc_x, simcc_y = self.forward(feats)
-    preds = self.decode((simcc_x, simcc_y))
-    return preds
+    return simcc_x, simcc_y
