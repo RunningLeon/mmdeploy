@@ -198,16 +198,22 @@ def from_onnx(onnx_model: Union[str, onnx.ModelProto],
         from .calib_utils import HDF5Calibrator
         config.set_flag(trt.BuilderFlag.INT8)
         assert int8_param is not None
-        config.int8_calibrator = HDF5Calibrator(
-            int8_param['calib_file'],
-            input_shapes,
-            model_type=int8_param['model_type'],
-            device_id=device_id,
-            algorithm=int8_param.get(
-                'algorithm', trt.CalibrationAlgoType.ENTROPY_CALIBRATION_2))
+        # support onnx with qdq from qat
+        has_calibrator = 'calib_file' in int8_param and os.path.exists(
+            int8_param['calib_file'])
+        if has_calibrator:
+            config.int8_calibrator = HDF5Calibrator(
+                int8_param['calib_file'],
+                input_shapes,
+                model_type=int8_param['model_type'],
+                device_id=device_id,
+                algorithm=int8_param.get(
+                    'algorithm',
+                    trt.CalibrationAlgoType.ENTROPY_CALIBRATION_2))
         if version.parse(trt.__version__) < version.parse('8'):
             builder.int8_mode = int8_mode
-            builder.int8_calibrator = config.int8_calibrator
+            if has_calibrator:
+                builder.int8_calibrator = config.int8_calibrator
 
     # create engine
     engine = builder.build_engine(network, config)
