@@ -82,7 +82,11 @@ def parse_args():
     parser.add_argument(
         '--uri',
         help='Remote ipv4:port or ipv6:port for inference on edge device.')
-
+    parser.add_argument(
+        '--json-file',
+        type=str,
+        help='log evaluation results to the json file',
+        default=None)
     args = parser.parse_args()
     return args
 
@@ -141,9 +145,16 @@ def main():
     else:
         outputs = task_processor.single_gpu_test(model, data_loader, args.show,
                                                  args.show_dir)
-    task_processor.evaluate_outputs(model_cfg, outputs, dataset, args.metrics,
-                                    args.out, args.metric_options,
-                                    args.format_only, args.log2file)
+    task_processor.evaluate_outputs(
+        model_cfg,
+        outputs,
+        dataset,
+        args.metrics,
+        args.out,
+        args.metric_options,
+        args.format_only,
+        args.log2file,
+        json_file=args.json_file)
     # only effective when the backend requires explicit clean-up (e.g. Ascend)
     destroy_model()
 

@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import os
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import mmcv
@@ -213,14 +214,17 @@ class Segmentation(BaseTask):
         return input_data['img'][0]
 
     @staticmethod
-    def evaluate_outputs(model_cfg,
-                         outputs: Sequence,
-                         dataset: Dataset,
-                         metrics: Optional[str] = None,
-                         out: Optional[str] = None,
-                         metric_options: Optional[dict] = None,
-                         format_only: bool = False,
-                         log_file: Optional[str] = None):
+    def evaluate_outputs(
+        model_cfg,
+        outputs: Sequence,
+        dataset: Dataset,
+        metrics: Optional[str] = None,
+        out: Optional[str] = None,
+        metric_options: Optional[dict] = None,
+        format_only: bool = False,
+        log_file: Optional[str] = None,
+        json_file: Optional[str] = None,
+    ):
         """Perform post-processing to predictions of model.
 
         Args:
@@ -250,7 +254,13 @@ class Segmentation(BaseTask):
         if format_only:
             dataset.format_results(outputs, **kwargs)
         if metrics:
-            dataset.evaluate(outputs, metrics, logger=logger, **kwargs)
+            results = dataset.evaluate(
+                outputs, metrics, logger=logger, **kwargs)
+            if json_file:
+                _dir, _ = os.path.split(json_file)
+                if _dir and not os.path.exists(_dir):
+                    os.makedirs(_dir, exist_ok=True)
+                mmcv.dump(results, json_file, indent=4)
 
     def get_preprocess(self) -> Dict:
         """Get the preprocess information for SDK.
