@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
+import os
 
 from mmcv import DictAction
 from mmcv.parallel import MMDataParallel
@@ -117,13 +118,18 @@ def main():
         samples_per_gpu=model_cfg.data.samples_per_gpu,
         workers_per_gpu=model_cfg.data.workers_per_gpu)
 
-    # load the model of the backend
-    model = task_processor.init_backend_model(args.model, uri=args.uri)
+    _, ext = os.path.splitext(args.model[0])
+    if ext == '.pth':
+        model = task_processor.init_pytorch_model(args.model[0],
+                                                  args.cfg_options)
+    else:
+        # load the model of the backend
+        model = task_processor.init_backend_model(args.model, uri=args.uri)
 
     is_device_cpu = (args.device == 'cpu')
     device_id = None if is_device_cpu else parse_device_id(args.device)
 
-    destroy_model = model.destroy
+    # destroy_model = model.destroy
     model = MMDataParallel(model, device_ids=[device_id])
     # The whole dataset test wrapped a MMDataParallel class outside the module.
     # As mmcls.apis.test.py single_gpu_test defined, the MMDataParallel needs
@@ -156,7 +162,7 @@ def main():
         args.log2file,
         json_file=args.json_file)
     # only effective when the backend requires explicit clean-up (e.g. Ascend)
-    destroy_model()
+    # destroy_model()
 
 
 if __name__ == '__main__':

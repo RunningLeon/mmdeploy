@@ -3,6 +3,7 @@ import argparse
 import glob
 import os.path as osp
 
+import mmcv
 import numpy as np
 import torch
 from mmcv import DictAction
@@ -52,6 +53,8 @@ def parse_args():
         'is allowed.')
     parser.add_argument(
         '--batch-size', type=int, default=1, help='the batch size for test.')
+    parser.add_argument(
+        '--output', type=str, default=None, help='json path to save results')
     parser.add_argument(
         '--img-ext',
         type=str,
@@ -158,7 +161,15 @@ def main():
     settings.add_row(['warmup', args.warmup])
     print(settings)
     print('----- Results:')
-    TimeCounter.print_stats(backend)
+    stats = TimeCounter.print_stats(backend)
+    stats.update(
+        dict(
+            batch_size=args.batch_size,
+            shape=input_shape,
+            warmup=args.warmup,
+            iterations=args.num_iter))
+    if args.output is not None:
+        mmcv.dump(stats, args.output, indent=4)
 
 
 if __name__ == '__main__':

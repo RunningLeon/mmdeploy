@@ -164,3 +164,5 @@ class TimeCounter:
         ])
         results.float_format = '.3'
         print(results)
+        data = dict(latency_mean=latency_mean, fps_mean=fps_mean)
+        return data
