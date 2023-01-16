@@ -1,6 +1,17 @@
 _base_ = ['./segmentation_static.py', '../_base_/backends/tensorrt.py']
 
-onnx_config = dict(input_shape=[512, 512])
+onnx_config = dict(
+    input_shape=[512, 512],
+    dynamic_axes={
+        'input': {
+            0: 'batch',
+        },
+        'output': {
+            0: 'batch',
+        },
+    },
+)
+
 backend_config = dict(
     common_config=dict(max_workspace_size=1 << 30),
     model_inputs=[

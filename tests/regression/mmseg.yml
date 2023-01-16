@@ -44,11 +44,11 @@ tensorrt:
   pipeline_trt_static_fp32_512x512: &pipeline_trt_static_fp32_512x512
     convert_image: *convert_image
     backend_test: False
-    deploy_config: configs/mmseg/segmentation_tensorrt_static-512x1024.py
+    deploy_config: configs/mmseg/segmentation_tensorrt_static-512x512.py
   pipeline_trt_static_fp32_512x1024: &pipeline_trt_static_fp32_512x1024
     convert_image: *convert_image
     backend_test: False
-    deploy_config: configs/mmseg/segmentation_tensorrt_static-512x512.py
+    deploy_config: configs/mmseg/segmentation_tensorrt_static-512x1024.py
   pipeline_trt_static_fp16: &pipeline_trt_static_fp16
     convert_image: *convert_image
     backend_test: *default_backend_test
@@ -137,9 +137,9 @@ models:
     model_configs:
       - configs/ann/ann_r50-d8_4xb2-80k_cityscapes-512x1024.py
     pipelines:
-      - *pipeline_ort_static_fp32_512x1024
-      - *pipeline_trt_static_fp32_512x1024
-      - *pipeline_ncnn_static_fp32_512x1024
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
+      - *pipeline_ncnn_static_fp32_512x512
   - name: ANN
     static: True
     metafile: configs/ann/ann.yml
@@ -156,9 +156,9 @@ models:
     model_configs:
       - configs/apcnet/apcnet_r50-d8_4xb2-40k_cityscapes-512x1024.py
     pipelines:
-      - *pipeline_ort_static_fp32_512x1024
-      - *pipeline_trt_static_fp32_512x1024
-      - *pipeline_ncnn_static_fp32_512x1024
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
+      - *pipeline_ncnn_static_fp32_512x512
   - name: APCNet
     static: True
     metafile: configs/apcnet/apcnet.yml
@@ -174,25 +174,25 @@ models:
       - configs/bisenetv1/bisenetv1_r18-d32-in1k-pre_4xb8-160k_cityscapes-1024x1024.py
       - configs/bisenetv1/bisenetv1_r18-d32-in1k-pre_4xb4-160k_coco-stuff164k-512x512.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
       - *pipeline_ncnn_static_fp32_512x512
   - name: BiSeNetV2
     metafile: configs/bisenetv2/bisenetv2.yml
     model_configs:
       - configs/bisenetv2/bisenetv2_fcn_4xb4-160k_cityscapes-1024x1024.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
       - *pipeline_ncnn_static_fp32_512x512
   - name: CGNet
     metafile: configs/cgnet/cgnet.yml
     model_configs:
       - configs/cgnet/cgnet_fcn_4xb8-60k_cityscapes-512x1024.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
-      - *pipeline_ncnn_static_fp32_512x1024
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
+      - *pipeline_ncnn_static_fp32_512x512
   - name: deeplabv3
     metafile: configs/deeplabv3/deeplabv3.yml
     model_configs:
@@ -201,8 +201,8 @@ models:
       - configs/deeplabv3/deeplabv3_r50-d8_4xb4-80k_ade20k-512x512.py
       - configs/deeplabv3/deeplabv3_r50-d8_4xb4-40k_voc12aug-512x512.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
       - *pipeline_ncnn_static_fp32_512x512
   - name: deeplabv3+
     metafile: configs/deeplabv3plus/deeplabv3plus.yml
@@ -214,17 +214,17 @@ models:
       - configs/deeplabv3plus/deeplabv3plus_r50-d8_4xb4-80k_potsdam-512x512.py
       - configs/deeplabv3plus/deeplabv3plus_r50-d8_4xb4-80k_loveda-512x512.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
       - *pipeline_ncnn_static_fp32_512x512
   - name: EMANet
     metafile: configs/emanet/emanet.yml
     model_configs:
       - configs/emanet/emanet_r50-d8_4xb2-80k_cityscapes-512x1024.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
-      - *pipeline_ncnn_static_fp32_512x1024
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
+      - *pipeline_ncnn_static_fp32_512x512
   - name: EncNet
     metafile: configs/encnet/encnet.yml
     model_configs:
@@ -232,33 +232,33 @@ models:
       - configs/encnet/encnet_r50-d8_4xb4-40k_voc12aug-512x512.py
       - configs/encnet/encnet_r50-d8_4xb4-160k_ade20k-512x512.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp16
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
       - *pipeline_ncnn_static_fp32_512x512
   - name: ERFNet
     metafile: configs/erfnet/erfnet.yml
     model_configs:
       - configs/erfnet/erfnet_fcn_4xb4-160k_cityscapes-512x1024.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
-      - *pipeline_ncnn_static_fp32_512x1024
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
+      - *pipeline_ncnn_static_fp32_512x512
   - name: Fast-SCNN
     metafile: configs/fastscnn/fastscnn.yml
     model_configs:
       - configs/fastscnn/fast_scnn_8xb4-160k_cityscapes-512x1024.py
     pipelines:
-      - *pipeline_ort_static_fp32_512x1024
-      - *pipeline_trt_static_fp32_512x1024
-      - *pipeline_ncnn_static_fp32_512x1024
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
+      - *pipeline_ncnn_static_fp32_512x512
   - name: FastFCN
     metafile: configs/fastfcn/fastfcn.yml
     model_configs:
       - configs/fastfcn/fastfcn_r50-d32_jpu_aspp_4xb2-80k_cityscapes-512x1024.py
       - configs/fastfcn/fastfcn_r50-d32_jpu_aspp_4xb4-80k_ade20k-512x512.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
       - *pipeline_ncnn_static_fp32_512x512
   - name: FCN
     metafile: configs/fcn/fcn.yml
@@ -268,8 +268,8 @@ models:
       - configs/fcn/fcn_r50-d8_4xb4-80k_ade20k-512x512.py
       - configs/fcn/
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
       - *pipeline_ncnn_static_fp32_512x512
   - name: GCNet
     metafile: configs/gcnet/gcnet.yml
@@ -278,16 +278,16 @@ models:
       - configs/gcnet/gcnet_r50-d8_4xb4-40k_voc12aug-512x512.py
       - configs/gcnet/gcnet_r50-d8_4xb4-160k_ade20k-512x512.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
       - *pipeline_ncnn_static_fp32_512x512
   - name: ICNet
     metafile: configs/icnet/icnet.yml
     model_configs:
       - configs/icnet/icnet_r50-d8-in1k-pre_4xb2-160k_cityscapes-832x832.py
     pipelines:
-      - *pipeline_ort_static_fp32_1024x2048
-      - *pipeline_trt_static_fp32_1024x2048
+      - *pipeline_trt_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
       - *pipeline_ncnn_static_fp32_512x512
   - name: ISANet
     metafile: configs/isanet/isanet.yml
@@ -306,8 +306,8 @@ models:
       - configs/ocrnet/ocrnet_hr18_4xb4-40k_voc12aug-512x512.py
       - configs/ocrnet/ocrnet_hr18_4xb4-160k_ade20k-512x512.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
       - *pipeline_ncnn_static_fp32_512x512
   - name: PointRend
     metafile: configs/point_rend/point_rend.yml
@@ -345,8 +345,8 @@ models:
       - configs/sem_fpn/fpn_r50_4xb2-80k_cityscapes-512x1024.py
       - configs/sem_fpn/fpn_r50_4xb4-160k_ade20k-512x512.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
       - *pipeline_ncnn_static_fp32_512x512
   - name: STDC
     metafile: configs/stdc/stdc.yml
@@ -354,17 +354,17 @@ models:
       - configs/stdc/stdc1_in1k-pre_4xb12-80k_cityscapes-512x1024.py
       - configs/stdc/stdc2_in1k-pre_4xb12-80k_cityscapes-512x1024.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
-      - *pipeline_ncnn_static_fp32_512x1024
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
+      - *pipeline_ncnn_static_fp32_512x512
   - name: UNet
     metafile: configs/unet/unet.yml
     model_configs:
       - configs/unet/unet-s5-d16_fcn_4xb4-160k_cityscapes-512x1024.py
     pipelines:
-      - *pipeline_ort_dynamic_fp32
-      - *pipeline_trt_dynamic_fp32
-      - *pipeline_ncnn_static_fp32_512x1024
+      - *pipeline_ort_static_fp32_512x512
+      - *pipeline_trt_static_fp32_512x512
+      - *pipeline_ncnn_static_fp32_512x512
   - name: UPerNet
     metafile: configs/upernet/upernet.yml
     model_configs:
