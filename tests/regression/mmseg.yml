@@ -69,7 +69,7 @@ tensorrt:
   pipeline_trt_dynamic_fp32: &pipeline_trt_dynamic_fp32
     convert_image: *convert_image
     backend_test: False
-    deploy_config: configs/mmseg/segmentation_tensorrt_dynamic-512x1024-2048x2048.py
+    deploy_config: configs/mmseg/segmentation_tensorrt_dynamic-512x512-2048x2048.py
 
   pipeline_trt_dynamic_fp16: &pipeline_trt_dynamic_fp16
     convert_image: *convert_image

@@ -18,6 +18,8 @@ def normalize__ncnn(input: torch.Tensor,
     Make sure L2 norm on channel dim and be exported to ncnn correctly.
     """
     ctx = FUNCTION_REWRITER.get_context()
+    if p != 2:
+        return ctx.origin_func(p=p, dim=dim, eps=eps, *args, **kwargs)
     if dim < 0:
         dim += input.ndim
     assert dim != 0, 'Should not normalize on batch index'
