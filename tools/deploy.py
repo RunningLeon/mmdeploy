@@ -62,6 +62,7 @@ def parse_args():
         '--uri',
         default='192.168.1.1:60000',
         help='Remote ipv4:port or ipv6:port for inference on edge device.')
+    parser.add_argument('--trtexec', action='store_true', help='Use trtexec')
     args = parser.parse_args()
     return args
 
@@ -139,14 +140,17 @@ def main():
     ir_config = get_ir_config(deploy_cfg)
     ir_save_file = ir_config['save_file']
     ir_type = IR.get(ir_config['type'])
-    torch2ir(ir_type)(
-        args.img,
-        args.work_dir,
-        ir_save_file,
-        deploy_cfg_path,
-        model_cfg_path,
-        checkpoint_path,
-        device=args.device)
+    # TODO: remove
+    ir_model_path = osp.join(args.work_dir, ir_save_file)
+    if not osp.exists(ir_model_path):
+        torch2ir(ir_type)(
+            args.img,
+            args.work_dir,
+            ir_save_file,
+            deploy_cfg_path,
+            model_cfg_path,
+            checkpoint_path,
+            device=args.device)
 
     # convert backend
     ir_files = [osp.join(args.work_dir, ir_save_file)]
@@ -229,14 +233,24 @@ def main():
     PIPELINE_MANAGER.set_log_level(log_level, [to_backend])
     if backend == Backend.TENSORRT:
         PIPELINE_MANAGER.enable_multiprocess(True, [to_backend])
-    backend_files = to_backend(
-        backend,
-        ir_files,
-        work_dir=args.work_dir,
-        deploy_cfg=deploy_cfg,
-        log_level=log_level,
-        device=args.device,
-        uri=args.uri)
+    # TODO Remove
+    trt_engine_path = osp.join(args.work_dir,
+                               osp.splitext(ir_save_file)[0] + '.engine')
+    if not osp.exists(trt_engine_path):
+        if args.trtexec:
+            cmd = f'trtexec --onnx={ir_model_path} ' \
+                  f'--saveEngine={trt_engine_path} --workspace=1024'
+            ret = os.system(cmd)
+            assert ret == 0, f'Failed to run {cmd}'
+        else:
+            backend_files = to_backend(
+                backend,
+                ir_files,
+                work_dir=args.work_dir,
+                deploy_cfg=deploy_cfg,
+                log_level=log_level,
+                device=args.device,
+                uri=args.uri)
 
     # ncnn quantization
     if backend == Backend.NCNN and quant:
@@ -282,14 +296,16 @@ def main():
         extra['uri'] = args.uri
 
     # get backend inference result, try render
-    create_process(
-        f'visualize {backend.value} model',
-        target=visualize_model,
-        args=(model_cfg_path, deploy_cfg_path, backend_files, args.test_img,
-              args.device),
-        kwargs=extra,
-        ret_value=ret_value)
-
+    # create_process(
+    #     f'visualize {backend.value} model',
+    #     target=visualize_model,
+    #     args=(model_cfg_path, deploy_cfg_path, backend_files, args.test_img,
+    #           args.device),
+    #     kwargs=extra,
+    #     ret_value=ret_value)
+    print(f'visualize {backend.value} model', )
+    visualize_model(model_cfg_path, deploy_cfg_path, backend_files,
+                    args.test_img, args.device, **extra)
     # get pytorch model inference result, try visualize if possible
     create_process(
         'visualize pytorch model',
@@ -301,6 +317,7 @@ def main():
             output_file=osp.join(args.work_dir, 'output_pytorch.jpg'),
             show_result=args.show),
         ret_value=ret_value)
+
     logger.info('All process success.')
 
 
