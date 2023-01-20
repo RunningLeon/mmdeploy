@@ -237,7 +237,8 @@ def update_report(report_dict: dict, model_name: str, model_config: str,
         parent_dir, filename = os.path.split(checkpoint)
         parent_dir = os.path.abspath(parent_dir)
         work_dir = report_txt_path.parent.absolute().resolve()
-        parent_dir = parent_dir.replace(str(work_dir), '${WORK_DIR}')
+        parent_dir = parent_dir.replace(
+            str(work_dir), '../mmdeploy_regression_working_dir')
         checkpoint = os.path.join(parent_dir, filename)
 
     # save to tmp file
