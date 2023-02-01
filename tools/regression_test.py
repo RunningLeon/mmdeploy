@@ -740,7 +740,7 @@ def get_backend_result(pipeline_info: dict, model_cfg_path: Path,
             f'--device {device_type} ', '--log-level INFO'
         ]
 
-    cmd_lines += ['--dump-info']
+    # cmd_lines += ['--trtexec']
 
     if test_img_path is not None:
         cmd_lines += [f'--test-img {test_img_path}']
