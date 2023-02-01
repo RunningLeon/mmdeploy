@@ -236,6 +236,7 @@ def main():
     # TODO Remove
     trt_engine_path = osp.join(args.work_dir,
                                osp.splitext(ir_save_file)[0] + '.engine')
+    backend_files = [trt_engine_path]
     if not osp.exists(trt_engine_path):
         if args.trtexec:
             cmd = f'trtexec --onnx={ir_model_path} ' \
