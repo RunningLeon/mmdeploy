@@ -297,16 +297,14 @@ def main():
         extra['uri'] = args.uri
 
     # get backend inference result, try render
-    # create_process(
-    #     f'visualize {backend.value} model',
-    #     target=visualize_model,
-    #     args=(model_cfg_path, deploy_cfg_path, backend_files, args.test_img,
-    #           args.device),
-    #     kwargs=extra,
-    #     ret_value=ret_value)
+    create_process(
+        f'visualize {backend.value} model',
+        target=visualize_model,
+        args=(model_cfg_path, deploy_cfg_path, backend_files, args.test_img,
+              args.device),
+        kwargs=extra,
+        ret_value=ret_value)
     print(f'visualize {backend.value} model', )
-    visualize_model(model_cfg_path, deploy_cfg_path, backend_files,
-                    args.test_img, args.device, **extra)
     # get pytorch model inference result, try visualize if possible
     create_process(
         'visualize pytorch model',
