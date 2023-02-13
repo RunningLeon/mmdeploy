@@ -39,8 +39,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV CUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-${CUDA}
 ENV LD_LIBRARY_PATH=/usr/local/cuda-${CUDA}/lib64/:$LD_LIBRARY_PATH
-ENV PYTHON_INCLUDE_DIR=$(python3 -c 'import sysconfig;print(sysconfig.get_paths()["include"])')
-ENV PYTHON_VERSION_SHORT=$(python3 -V | awk '{print $2}' | awk '{split($0, a, "."); print a[1]a[2]}')
+ENV PYTHON_INCLUDE_DIR=/usr/include/python3.8
+ENV PYTHON_VERSION_SHORT=38
 
 # install jdk, onnxruntime, openvino, and other python packages
 RUN wget https://download.java.net/java/GA/jdk18/43f95e8614114aeaa8e8a5fcf20a682d/36/GPL/openjdk-18_linux-x64_bin.tar.gz &&\
