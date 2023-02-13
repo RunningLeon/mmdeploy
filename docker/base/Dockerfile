@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libopencv-dev \
         libprotobuf-dev protobuf-compiler \
         cmake \
-        python3-pip \
+        python3-dev python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 ENV CUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-${CUDA}
