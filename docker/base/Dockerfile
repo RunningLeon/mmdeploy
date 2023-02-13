@@ -30,13 +30,13 @@ ENV CUDA_INT=113
 RUN apt-get update && apt-get install -y --no-install-recommends \
         apt-utils \
         ca-certificates \
-        libprotobuf-dev protobuf-compiler \
         gcc-7 \
         g++-7 \
         git \
         vim \
         wget \
         libopencv-dev \
+        libprotobuf-dev protobuf-compiler \
         cmake \
         python3-pip \
     && rm -rf /var/lib/apt/lists/*
@@ -45,11 +45,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN wget https://download.java.net/java/GA/jdk18/43f95e8614114aeaa8e8a5fcf20a682d/36/GPL/openjdk-18_linux-x64_bin.tar.gz &&\
     tar xvf openjdk-18_linux-x64_bin.tar.gz && rm -rf openjdk-18_linux-x64_bin.tar.gz && \
     wget https://github.com/microsoft/onnxruntime/releases/download/v${ONNXRUNTIME_VERSION}/onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}.tgz &&\
-    tar -zxvf onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}.tgz &&\
-    pip3 install onnxruntime-gpu==${ONNXRUNTIME_VERSION} &&\
-    pip3 install openvino-dev pycuda openmim cmake &&\
-    pip3 install opencv-python==${OPENCV_VERSION} opencv-python-headless==${OPENCV_VERSION} opencv-contrib-python==${OPENCV_VERSION} &&\
-    pip3 install torch==${TORCH_VERSION}+cu${CUDA_INT} torchvision==${TORCHVISION_VERSION}+cu${CUDA_INT} -f https://download.pytorch.org/whl/torch_stable.html
+    tar -zxvf onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}.tgz && rm onnxruntime-*.tgz &&\
+    python3 -m pip install --upgrade pip
+    python3 -m pip install onnxruntime-gpu==${ONNXRUNTIME_VERSION} &&\
+    python3 -m pip install openvino openvino-dev[onnx] pycuda openmim cmake &&\
+    python3 -m pip install opencv-python==${OPENCV_VERSION} opencv-python-headless==${OPENCV_VERSION} opencv-contrib-python==${OPENCV_VERSION} &&\
+    python3 -m pip install torch==${TORCH_VERSION}+cu${CUDA_INT} torchvision==${TORCHVISION_VERSION}+cu${CUDA_INT} -f https://download.pytorch.org/whl/torch_stable.html
 
 # create env
 ENV LD_LIBRARY_PATH=/usr/local/cuda-${CUDA}/lib64/:$LD_LIBRARY_PATH
@@ -67,7 +68,7 @@ RUN git clone --depth 1 --branch v${PPLNN_VERSION} --recursive https://github.co
     cd ./python/package && \
     ./build.sh && \
     cd /tmp/pyppl-package/dist && \
-    pip3 install pyppl*.whl
+    python3 -m pip install pyppl*.whl
 
 ENV PPLNN_DIR=/root/workspace/ppl.nn
 ENV pplnn_DIR=${PPLNN_DIR}/pplnn-build/install/lib/cmake/ppl
@@ -76,12 +77,12 @@ ENV PYTHONPATH=/root/workspace/ppl.nn/install/lib:$PYTHONPATH
 ### build ncnn
 RUN git clone --depth 1 --branch ${NCNN_VERSION} --recursive https://github.com/Tencent/ncnn.git &&\
     cd ncnn &&\
-    export NCNN_DIR=$(pwd) &&\
+    ENV NCNN_DIR=$(pwd) &&\
     mkdir -p build && cd build &&\
     cmake -DNCNN_VULKAN=OFF -DNCNN_PYTHON=ON -DNCNN_BUILD_TOOLS=ON -DCMAKE_INSTALL_PREFIX=$NCNN_DIR/install .. &&\
     make -j $(nproc) && make install &&\
     cd $NCNN_DIR/python &&\
-    pip3 install -e .
+    python3 -m pip install -e .
 
 ENV ncnn_DIR=/root/workspace/ncnn/install/lib/cmake/ncnn
 ENV PYTHONPATH=/root/workspace/ncnn/python:$PYTHONPATH
@@ -94,11 +95,12 @@ RUN git clone --depth 1 --branch v${PPLCV_VERSION} https://github.com/openppl-pu
 ENV pplcv_DIR=/root/workspace/ppl.cv/cuda-build/install/lib/cmake/ppl
 
 ### install tensorrt
-RUN wget $TENSORRT_URL -C /root/workspace && \
-    tar -zxvf /root/workspace/TensorRT-${TENSORRT_VERSION}*.tar.gz &&\
+RUN wget -c $TENSORRT_URL && \
+    tar -zxvf /root/workspace/TensorRT-${TENSORRT_VERSION}*.tar.gz -C /root/workspace &&\
+    rm -rf TensorRT-${TENSORRT_VERSION}*.tar.gz &&\
     ln -sf /root/workspace/TensorRT-${TENSORRT_VERSION} /root/workspace/TensorRT  &&\
-    export PY_VERSION=$(python3 -V | awk '{print $2}' | awk '{split($0, a, "."); print a[1]a[2]}') && \
-    pip3 install /root/workspace/TensorRT/python/tensorrt-*-cp${PY_VERSION}-none-linux_x86_64.whl
+    ENV PY_VERSION=$(python3 -V | awk '{print $2}' | awk '{split($0, a, "."); print a[1]a[2]}') && \
+    python3 -m pip install /root/workspace/TensorRT/python/tensorrt-*-cp${PY_VERSION}-none-linux_x86_64.whl
 
 ENV TENSORRT_DIR=/root/workspace/TensorRT
 ENV LD_LIBRARY_PATH=$TENSORRT_DIR/lib:$LD_LIBRARY_PATH
