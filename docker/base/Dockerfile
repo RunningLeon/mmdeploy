@@ -28,6 +28,7 @@ ENV CUDA_VERSION=11.3
 ENV CUDA_INT=113
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        apt-utils \
         ca-certificates \
         libprotobuf-dev protobuf-compiler \
         gcc-7 \
@@ -46,7 +47,7 @@ RUN wget https://download.java.net/java/GA/jdk18/43f95e8614114aeaa8e8a5fcf20a682
     wget https://github.com/microsoft/onnxruntime/releases/download/v${ONNXRUNTIME_VERSION}/onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}.tgz &&\
     tar -zxvf onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}.tgz &&\
     pip3 install onnxruntime-gpu==${ONNXRUNTIME_VERSION} &&\
-    pip3 install openvino-dev[onnx] pycuda openmim cmake &&\
+    pip3 install openvino-dev pycuda openmim cmake &&\
     pip3 install opencv-python==${OPENCV_VERSION} opencv-python-headless==${OPENCV_VERSION} opencv-contrib-python==${OPENCV_VERSION} &&\
     pip3 install torch==${TORCH_VERSION}+cu${CUDA_INT} torchvision==${TORCHVISION_VERSION}+cu${CUDA_INT} -f https://download.pytorch.org/whl/torch_stable.html
 
