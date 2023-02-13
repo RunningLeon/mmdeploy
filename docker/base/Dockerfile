@@ -1,6 +1,5 @@
 FROM nvidia/cuda:11.3.0-cudnn8-devel-ubuntu20.04
 
-ARG PYTHON_VERSION=3.8
 ARG TORCH_VERSION=1.10.0
 ARG TORCHVISION_VERSION=0.11.0
 
@@ -15,9 +14,6 @@ ARG NCNN_VERSION=20221128
 ARG TENSORRT_VERSION=8.2.3.0
 # tensorrt tar file url
 ARG TENSORRT_URL
-
-# Whether to change pip source to aliyun
-ARG USE_SRC_INSIDE=true
 
 USER root
 WORKDIR /root/workspace
@@ -48,7 +44,7 @@ RUN wget https://download.java.net/java/GA/jdk18/43f95e8614114aeaa8e8a5fcf20a682
     tar -zxvf onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}.tgz && rm onnxruntime-*.tgz &&\
     python3 -m pip install --upgrade pip &&\
     python3 -m pip install onnxruntime-gpu==${ONNXRUNTIME_VERSION} &&\
-    python3 -m pip install openvino openvino-dev[onnx] pycuda openmim cmake &&\
+    python3 -m pip install openvino openvino-dev[onnx] openmim &&\
     python3 -m pip install opencv-python==${OPENCV_VERSION} opencv-python-headless==${OPENCV_VERSION} opencv-contrib-python==${OPENCV_VERSION} &&\
     python3 -m pip install torch==${TORCH_VERSION}+cu${CUDA_INT} torchvision==${TORCHVISION_VERSION}+cu${CUDA_INT} -f https://download.pytorch.org/whl/torch_stable.html
 
