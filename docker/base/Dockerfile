@@ -39,6 +39,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV CUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-${CUDA}
 ENV LD_LIBRARY_PATH=/usr/local/cuda-${CUDA}/lib64/:$LD_LIBRARY_PATH
+ENV PYTHON_INCLUDE_DIR=$(python3 -c 'import sysconfig;print(sysconfig.get_paths()["include"])')
+ENV PYTHON_VERSION_SHORT=$(python3 -V | awk '{print $2}' | awk '{split($0, a, "."); print a[1]a[2]}')
 
 # install jdk, onnxruntime, openvino, and other python packages
 RUN wget https://download.java.net/java/GA/jdk18/43f95e8614114aeaa8e8a5fcf20a682d/36/GPL/openjdk-18_linux-x64_bin.tar.gz &&\
@@ -57,11 +59,10 @@ ENV PATH=$JAVA_HOME/bin:$PATH
 ENV ONNXRUNTIME_VERSION=${ONNXRUNTIME_VERSION}
 ENV ONNXRUNTIME_DIR=/root/workspace/onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}
 ENV LD_LIBRARY_PATH=${ONNXRUNTIME_DIR}/lib:$LD_LIBRARY_PATH
-
 ### install ppl.nn
 RUN git clone --depth 1 --branch v${PPLNN_VERSION} --recursive https://github.com/openppl-public/ppl.nn.git &&\
     cd ppl.nn &&\
-    ./build.sh -DPPLNN_USE_X86_64=ON -DPPLNN_USE_CUDA=ON -DPPLNN_ENABLE_PYTHON_API=ON -DPYTHON3_INCLUDE_DIRS=/usr/include/python3.8 &&\
+    ./build.sh -DPPLNN_USE_X86_64=ON -DPPLNN_USE_CUDA=ON -DPPLNN_ENABLE_PYTHON_API=ON -DPYTHON3_INCLUDE_DIRS=${PYTHON_INCLUDE_DIR} &&\
     cd ./python/package && \
     ./build.sh && \
     cd /tmp/pyppl-package/dist && \
@@ -96,8 +97,7 @@ RUN wget -c $TENSORRT_URL && \
     tar -zxvf /root/workspace/TensorRT-${TENSORRT_VERSION}*.tar.gz -C /root/workspace &&\
     rm -rf TensorRT-${TENSORRT_VERSION}*.tar.gz &&\
     ln -sf /root/workspace/TensorRT-${TENSORRT_VERSION} /root/workspace/TensorRT  &&\
-    PY_VERSION=$(python3 -V | awk '{print $2}' | awk '{split($0, a, "."); print a[1]a[2]}') && \
-    python3 -m pip install /root/workspace/TensorRT/python/tensorrt-*-cp${PY_VERSION}-none-linux_x86_64.whl
+    python3 -m pip install /root/workspace/TensorRT/python/tensorrt-*-cp${PYTHON_VERSION_SHORT}-none-linux_x86_64.whl
 
 ENV TENSORRT_DIR=/root/workspace/TensorRT
 ENV LD_LIBRARY_PATH=$TENSORRT_DIR/lib:$LD_LIBRARY_PATH
