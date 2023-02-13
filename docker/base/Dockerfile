@@ -46,7 +46,7 @@ RUN wget https://download.java.net/java/GA/jdk18/43f95e8614114aeaa8e8a5fcf20a682
     tar xvf openjdk-18_linux-x64_bin.tar.gz && rm -rf openjdk-18_linux-x64_bin.tar.gz && \
     wget https://github.com/microsoft/onnxruntime/releases/download/v${ONNXRUNTIME_VERSION}/onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}.tgz &&\
     tar -zxvf onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}.tgz && rm onnxruntime-*.tgz &&\
-    python3 -m pip install --upgrade pip
+    python3 -m pip install --upgrade pip &&\
     python3 -m pip install onnxruntime-gpu==${ONNXRUNTIME_VERSION} &&\
     python3 -m pip install openvino openvino-dev[onnx] pycuda openmim cmake &&\
     python3 -m pip install opencv-python==${OPENCV_VERSION} opencv-python-headless==${OPENCV_VERSION} opencv-contrib-python==${OPENCV_VERSION} &&\
