@@ -59,6 +59,7 @@ ENV PATH=$JAVA_HOME/bin:$PATH
 ENV ONNXRUNTIME_VERSION=${ONNXRUNTIME_VERSION}
 ENV ONNXRUNTIME_DIR=/root/workspace/onnxruntime-linux-x64-${ONNXRUNTIME_VERSION}
 ENV LD_LIBRARY_PATH=${ONNXRUNTIME_DIR}/lib:$LD_LIBRARY_PATH
+
 ### install ppl.nn
 RUN git clone --depth 1 --branch v${PPLNN_VERSION} --recursive https://github.com/openppl-public/ppl.nn.git &&\
     cd ppl.nn &&\
@@ -68,18 +69,16 @@ RUN git clone --depth 1 --branch v${PPLNN_VERSION} --recursive https://github.co
     cd /tmp/pyppl-package/dist && \
     python3 -m pip install pyppl*.whl
 
-ENV PPLNN_DIR=/root/workspace/ppl.nn
-ENV pplnn_DIR=${PPLNN_DIR}/pplnn-build/install/lib/cmake/ppl
+ENV pplnn_DIR=/root/workspace/ppl.nn/pplnn-build/install/lib/cmake/ppl
 ENV PYTHONPATH=/root/workspace/ppl.nn/install/lib:$PYTHONPATH
+
 
 ### build ncnn
 RUN git clone --depth 1 --branch ${NCNN_VERSION} --recursive https://github.com/Tencent/ncnn.git &&\
-    cd ncnn &&\
-    ENV NCNN_DIR=$(pwd) &&\
-    mkdir -p build && cd build &&\
-    cmake -DNCNN_VULKAN=OFF -DNCNN_PYTHON=ON -DNCNN_BUILD_TOOLS=ON -DCMAKE_INSTALL_PREFIX=$NCNN_DIR/install .. &&\
+    mkdir ncnn/build && cd ncnn/build &&\
+    cmake -DNCNN_VULKAN=OFF -DNCNN_PYTHON=ON -DNCNN_BUILD_TOOLS=ON -DCMAKE_INSTALL_PREFIX=../install .. &&\
     make -j $(nproc) && make install &&\
-    cd $NCNN_DIR/python &&\
+    cd ../python &&\
     python3 -m pip install -e .
 
 ENV ncnn_DIR=/root/workspace/ncnn/install/lib/cmake/ncnn
