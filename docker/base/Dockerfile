@@ -34,6 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libopencv-dev \
         libprotobuf-dev protobuf-compiler \
         cmake \
+        unzip \
         python3-dev python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
