@@ -74,7 +74,8 @@ def main():
             logging.warning(f'File not exists: {onnx_path}')
             continue
         work_dir, _ = osp.split(onnx_path)
-        engine_dir = osp.join(work_dir, args.plantform, config.precision)
+        engine_dir = osp.join(work_dir, args.plantform, config.precision,
+                              config.input_shape)
         os.makedirs(engine_dir, exist_ok=True)
         engine_path = osp.join(engine_dir, 'end2end.engine')
         log_path = osp.join(engine_dir, 'trtexec.log')
