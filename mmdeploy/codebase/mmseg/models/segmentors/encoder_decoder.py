@@ -25,6 +25,7 @@ def encoder_decoder__predict(self, inputs, data_samples, **kwargs):
         batch_img_metas.append(data_sample.metainfo)
     x = self.extract_feat(inputs)
     seg_logit = self.decode_head.predict(x, batch_img_metas, self.test_cfg)
+    return seg_logit
     seg_pred = seg_logit.argmax(dim=1, keepdim=True)
     return seg_pred
 

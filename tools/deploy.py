@@ -147,7 +147,7 @@ def main():
         model_cfg_path,
         checkpoint_path,
         device=args.device)
-
+    return
     # convert backend
     ir_files = [osp.join(args.work_dir, ir_save_file)]
 

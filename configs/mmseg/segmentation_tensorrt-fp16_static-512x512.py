@@ -1,4 +1,4 @@
-_base_ = ['./segmentation_static.py', '../_base_/backends/tensorrt-fp16.py']
+_base_ = ['./segmentation_dynamic.py', '../_base_/backends/tensorrt-fp16.py']
 
 onnx_config = dict(input_shape=[512, 512])
 backend_config = dict(

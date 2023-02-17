@@ -1,0 +1,9 @@
+precision: fp16
+maxBatch: 1
+workspace: 2048
+calib: None
+iterations: 100
+warmUp: 1000
+streams: 1
+avgRuns: 100
+sparsity: disable
