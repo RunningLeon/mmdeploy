@@ -85,6 +85,7 @@ def main():
         cmd_lines = [
             'trtexec', '--useCudaGraph', f'--onnx={onnx_path}', '--verbose'
         ]
+        cmd_lines.append('--profilingVerbosity=detailed')
         cmd_lines.append(f'--saveEngine={engine_path}')
         cmd_lines.append(f'--exportTimes={time_json}')
         cmd_lines.append(f'--exportOutput={output_json}')
@@ -92,11 +93,9 @@ def main():
         cmd_lines.append(f'--exportLayerInfo={layerinfo_json}')
         cmd_lines.extend(
             [f'--avgRuns={config.avgRuns}', f'--workspace={config.workspace}'])
-        input_shape = f'input:{config.maxBatch}x3x{config.input_shape}'
-        cmd_lines.extend([
-            f'--shapes=input:{input_shape}',
-            f'--iterations={config.iterations}'
-        ])
+        input_shapes = f'input:{config.maxBatch}x3x{config.input_shape}'
+        cmd_lines.extend(
+            [f'--shapes={input_shapes}', f'--iterations={config.iterations}'])
         cmd_lines.extend([
             f'--warmUp={config.warmUp}', f'--streams={config.streams}',
             f'--sparsity={config.sparsity}'
