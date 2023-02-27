@@ -13,53 +13,61 @@ from mmdeploy.utils import get_root_logger
 from mmdeploy.utils.config_utils import (Backend, get_backend, get_input_shape,
                                          load_config)
 from mmdeploy.utils.timer import TimeCounter
+from .command import COMMAND_REGISTRY, Command
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description='MMDeploy Model Latency Test Tool.')
-    parser.add_argument('deploy_cfg', help='Deploy config path')
-    parser.add_argument('model_cfg', help='Model config path')
-    parser.add_argument('image_dir', help='Input directory to image files')
-    parser.add_argument(
-        '--model', type=str, nargs='+', help='Input model files.')
-    parser.add_argument(
-        '--device', help='device type for inference', default='cuda:0')
-    parser.add_argument(
-        '--shape',
-        type=str,
-        help='Input shape to test in `HxW` format, e.g., `800x1344`',
-        default=None)
-    parser.add_argument(
-        '--warmup',
-        type=int,
-        help='warmup iterations before counting inference latency.',
-        default=10)
-    parser.add_argument(
-        '--num-iter',
-        type=int,
-        help='Number of iterations to run the inference.',
-        default=100)
-    parser.add_argument(
-        '--cfg-options',
-        nargs='+',
-        action=DictAction,
-        help='override some settings in the used config, the key-value pair '
-        'in xxx=yyy format will be merged into config file. If the value to '
-        'be overwritten is a list, it should be like key="[a,b]" or key=a,b '
-        'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
-        'Note that the quotation marks are necessary and that no white space '
-        'is allowed.')
-    parser.add_argument(
-        '--batch-size', type=int, default=1, help='the batch size for test.')
-    parser.add_argument(
-        '--img-ext',
-        type=str,
-        nargs='+',
-        help='the file extensions for input images from `image_dir`.',
-        default=['.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif'])
-    args = parser.parse_args()
-    return args
+@COMMAND_REGISTRY.register_module('profiler')
+class ProfilerCommand(Command):
+
+    def add_subparser(self, name: str, parser: argparse.ArgumentParser):
+        sub_parser = parser.add_parser(
+            name, description='MMDeploy Model Latency Test Tool.')
+        sub_parser.add_argument('deploy_cfg', help='Deploy config path')
+        sub_parser.add_argument('model_cfg', help='Model config path')
+        sub_parser.add_argument(
+            'image_dir', help='Input directory to image files')
+        sub_parser.add_argument(
+            '--model', type=str, nargs='+', help='Input model files.')
+        sub_parser.add_argument(
+            '--device', help='device type for inference', default='cuda:0')
+        sub_parser.add_argument(
+            '--shape',
+            type=str,
+            help='Input shape to test in `HxW` format, e.g., `800x1344`',
+            default=None)
+        sub_parser.add_argument(
+            '--warmup',
+            type=int,
+            help='warmup iterations before counting inference latency.',
+            default=10)
+        sub_parser.add_argument(
+            '--num-iter',
+            type=int,
+            help='Number of iterations to run the inference.',
+            default=100)
+        sub_parser.add_argument(
+            '--cfg-options',
+            nargs='+',
+            action=DictAction,
+            help='override some settings in the used config, the key-value '
+            'pair in xxx=yyy format will be merged into config file. If '
+            'the value to be overwritten is a list, it should be like '
+            'key="[a,b]" or key=a,b It also allows nested list/tuple '
+            'values, e.g. key="[(a,b),(c,d)]". Note that the quotation '
+            'marks are necessary and that no white space is allowed.')
+        sub_parser.add_argument(
+            '--batch-size',
+            type=int,
+            default=1,
+            help='the batch size for test.')
+        sub_parser.add_argument(
+            '--img-ext',
+            type=str,
+            nargs='+',
+            help='the file extensions for input images from `image_dir`.',
+            default=['.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif'])
+        sub_parser.set_defaults(run=_main)
+        return sub_parser
 
 
 def get_images(image_dir, extensions):
@@ -84,8 +92,7 @@ class TorchWrapper(torch.nn.Module):
         return self.model.test_step(*args, **kwargs)
 
 
-def main():
-    args = parse_args()
+def _main(args):
     deploy_cfg_path = args.deploy_cfg
     model_cfg_path = args.model_cfg
     logger = get_root_logger()
@@ -162,7 +169,3 @@ def main():
     print(settings)
     print('----- Results:')
     TimeCounter.print_stats(backend)
-
-
-if __name__ == '__main__':
-    main()

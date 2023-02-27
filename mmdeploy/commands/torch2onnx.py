@@ -8,32 +8,36 @@ from mmdeploy.apis import (extract_model, get_predefined_partition_cfg,
                            torch2onnx)
 from mmdeploy.utils import (get_ir_config, get_partition_config,
                             get_root_logger, load_config)
+from .command import COMMAND_REGISTRY, Command
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='Export model to ONNX.')
-    parser.add_argument('deploy_cfg', help='deploy config path')
-    parser.add_argument('model_cfg', help='model config path')
-    parser.add_argument('checkpoint', help='model checkpoint path')
-    parser.add_argument('img', help='image used to convert model model')
-    parser.add_argument(
-        '--work-dir',
-        default='./work-dir',
-        help='Directory to save output files.')
-    parser.add_argument(
-        '--device', help='device used for conversion', default='cpu')
-    parser.add_argument(
-        '--log-level',
-        help='set log level',
-        default='INFO',
-        choices=list(logging._nameToLevel.keys()))
-    args = parser.parse_args()
+@COMMAND_REGISTRY.register_module('torch2onnx')
+class Torch2OnnxCommand(Command):
 
-    return args
+    def add_subparser(self, name: str, parser: argparse.ArgumentParser):
+        sub_parser = parser.add_parser(
+            name, description='Export model to ONNX.')
+        sub_parser.add_argument('deploy_cfg', help='deploy config path')
+        sub_parser.add_argument('model_cfg', help='model config path')
+        sub_parser.add_argument('checkpoint', help='model checkpoint path')
+        sub_parser.add_argument(
+            'img', help='image used to convert model model')
+        sub_parser.add_argument(
+            '--work-dir',
+            default='./work-dir',
+            help='Directory to save output files.')
+        sub_parser.add_argument(
+            '--device', help='device used for conversion', default='cpu')
+        sub_parser.add_argument(
+            '--log-level',
+            help='set log level',
+            default='INFO',
+            choices=list(logging._nameToLevel.keys()))
+        sub_parser.set_defaults(run=_main)
+        return sub_parser
 
 
-def main():
-    args = parse_args()
+def _main(args):
     logger = get_root_logger(log_level=args.log_level)
 
     logger.info(f'torch2onnx: \n\tmodel_cfg: {args.model_cfg} '
@@ -79,7 +83,3 @@ def main():
                 dynamic_axes=dynamic_axes,
                 save_file=save_path)
     logger.info(f'torch2onnx finished. Results saved to {args.work_dir}')
-
-
-if __name__ == '__main__':
-    main()
