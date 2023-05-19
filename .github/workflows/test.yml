@@ -1,0 +1,147 @@
+name: test_win_sdk
+
+on:
+  push:
+    paths-ignore:
+      - "demo/**"
+      - "tools/**"
+
+  pull_request:
+    paths-ignore:
+      - "demo/**"
+      - "tools/**"
+      - "docs/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test_win_sdk:
+    timeout-minutes: 4320 # 72hours
+    runs-on: [self-hosted, win10-3080]
+    env:
+      BASE_ENV: cuda11.3-cudnn8.2-py3.8-torch1.10
+      DATASET_DIR: D:\reg-test\data
+      REGRESSION_DIR: D:\reg-test\regression_log
+      CHECKPOINT_DIR: D:\reg-test\checkpoints
+    defaults:
+      run:
+        shell: powershell
+    strategy:
+      matrix:
+        codebase: ['mmdet']
+        torch_version:  ['1.10.0']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Prepare resources
+        run: |
+          echo "============================== Inputs =============================="
+          echo "$env:GITHUB_RUN_ID"
+          echo "${{matrix.codebase}}"
+          echo "${{matrix.torch_version}}"
+          echo ""
+          echo "============================== Prepare dataset =============================="
+          New-Item -Path $pwd/data -ItemType SymbolicLink -Target $env:DATASET_DIR -Force
+          New-Item -Path $pwd/../mmdeploy_checkpoints -ItemType SymbolicLink -Target $env:CHECKPOINT_DIR -Force
+          ls data
+          ls ../mmdeploy_checkpoints
+          echo "============================== Prepare env =============================="
+          $env:TEMP_ENV = "$pwd/../temp_envs/$env:GITHUB_RUN_ID"
+          New-Item -Path "$env:TEMP_ENV" -ItemType Directory -Force
+          echo "TEMP_ENV=$env:TEMP_ENV" >> $env:GITHUB_ENV
+      - name: Setup Python Environment
+        run: |
+          echo "============================== Info =============================="
+          echo "env:path= $env:path"
+          echo "============================== Info =============================="
+          conda info
+          conda info -e
+          conda create -p $env:TEMP_ENV --clone $env:BASE_ENV -y
+          conda activate $env:TEMP_ENV
+          python -V
+          python -m pip install --upgrade pip
+          python -m pip install openmim numpy pycuda xlsxwriter packaging prettytable
+          python -m pip install opencv-python==4.5.4.60 opencv-python-headless==4.5.4.60 opencv-contrib-python==4.5.4.60
+          python .github/scripts/prepare_reg_test.py --torch-version ${{ matrix.torch_version }} --codebases ${{ matrix.codebase}}
+          python -m pip install -r requirements.txt
+          python -m pip list
+      - name: Build mmdeploy
+        run: |
+          conda activate $env:TEMP_ENV
+          python -V
+          $env:BACKENDS = "tensorrt"
+          $env:BACKENDS=% {$env:BACKENDS -replace " ", ";"}
+          $env:BACKENDS=% {$env:BACKENDS -replace "tensorrt", "trt"}
+          $env:BACKENDS=% {$env:BACKENDS -replace "onnxruntime", "ort"}
+          echo "env:BACKENDS = $env:BACKENDS"
+          $env:Torch_DIR=% {python -c "import torch;print(torch.utils.cmake_prefix_path + '\Torch')"}
+          echo "Torch_DIR=$env:Torch_DIR" >> $env:GITHUB_ENV
+          echo "BACKENDS=$env:BACKENDS" >> $env:GITHUB_ENV
+          New-Item -Path build -ItemType Directory -Force
+          cd build
+          cmake ..  -A x64 -T v142 `
+            -DMMDEPLOY_BUILD_TEST=OFF `
+            -DMMDEPLOY_BUILD_SDK_CSHARP_API=ON `
+            -DMMDEPLOY_BUILD_SDK_PYTHON_API=ON `
+            -DMMDEPLOY_BUILD_SDK=ON `
+            -DMMDEPLOY_TARGET_DEVICES="cpu;cuda" `
+            -DMMDEPLOY_TARGET_BACKENDS="$env:BACKENDS" `
+            -DMMDEPLOY_CODEBASES="all" `
+            -Dpplcv_DIR="$env:PPLCV_DIR\pplcv-build\install\lib\cmake\ppl" `
+            -DOpenCV_DIR="$env:OPENCV_DIR\build\x64\vc15\lib" `
+            -DTENSORRT_DIR="$env:TENSORRT_DIR" `
+            -DTorch_DIR="$env:Torch_DIR" `
+            -DONNXRUNTIME_DIR="$env:ONNXRUNTIME_DIR" `
+            -DMMDEPLOY_BUILD_EXAMPLES=OFF `
+            -DCUDNN_DIR="$env:CUDNN_DIR"
+
+          cmake --build . --config Release -- /m
+          cmake --install . --config Release
+          ls $pwd\bin\Release
+          ls $pwd\lib\Release
+      - name: Install mmdeploy converter
+        run: |
+          conda activate $env:TEMP_ENV
+          $env:path = "$pwd\build\bin\Release;" + $env:path
+          python -m pip install -e .
+          python .\tools\check_env.py
+      - name: Run regression test
+        run: |
+          conda activate $env:TEMP_ENV
+          $env:path = "$pwd\build\bin\Release;" + $env:path
+          python -V
+          echo "============================== Info =============================="
+          echo "env:path= $env:path"
+          echo "============================== Info =============================="
+          conda info
+          conda info -e
+          python -c 'import os;print(os.environ)'
+          python -c 'import sys;print(sys.path)'
+          $env:CONVERT_DIR = "$env:REGRESSION_DIR\convert_log\$env:GITHUB_RUN_ID-windows\${{matrix.codebase}}\torch${{matrix.torch_version}}"
+          echo "env:CONVERT_DIR = $env:CONVERT_DIR"
+          New-Item -Path "$env:CONVERT_DIR" -ItemType Directory -Force
+          New-Item -Path mmdeploy_regression_dir -ItemType SymbolicLink -Target $env:CONVERT_DIR -Force
+          python tools/regression_test.py `
+              --codebase ${{matrix.codebase}} `
+              --work-dir mmdeploy_regression_dir `
+              --device cuda:0 `
+              --models "maskrcnn" `
+              --backends "tensorrt" `
+              --performance
+          echo "Saved to $env:CONVERT_DIR"
+      - name: Check regression result
+        continue-on-error: true
+        run: |
+          conda activate $env:TEMP_ENV
+          python -V
+          $env:URL_PREFIX = "https://8d17-103-108-182-56.ngrok-free.app/convert_log/$env:GITHUB_RUN_ID-windows/${{matrix.codebase}}/torch${{matrix.torch_version}}"
+          echo "URL_PREFIX = $env:URL_PREFIX"
+          $env:REPORT_PREFIX = "$env:REGRESSION_DIR\convert_log\$env:GITHUB_RUN_ID-windows\${{matrix.codebase}}\torch${{matrix.torch_version}}\${{matrix.codebase}}_report"
+          echo "REPORT_PREFIX = $env:REPORT_PREFIX"
+          echo "## ${{matrix.codebase}} + [torch${{matrix.torch_version}}]($env:URL_PREFIX)" >> $env:GITHUB_STEP_SUMMARY
+          python .github/scripts/gen_reg_summary.py "$env:REPORT_PREFIX.xlsx" $env:URL_PREFIX
+          cat "$env:REPORT_PREFIX.md" >> $env:GITHUB_STEP_SUMMARY
