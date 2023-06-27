@@ -21,43 +21,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_cuda102:
+
+  build_cuda111:
     runs-on: ubuntu-20.04
     container:
-      image: pytorch/pytorch:1.9.0-cuda10.2-cudnn7-devel
+      image: pytorch/pytorch:1.9.0-cuda11.1-cudnn8-runtime
     env:
       FORCE_CUDA: 1
-    strategy:
-      matrix:
-        torch: [1.9.0+cu102]
-        include:
-          - torch: 1.9.0+cu102
-            torch_version: torch1.9
-            torchvision: 0.10.0+cu102
     steps:
       - uses: actions/checkout@v2
       - name: Install system dependencies
         run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
-          apt-get update && apt-get install -y ffmpeg libsm6 libxext6 git ninja-build libglib2.0-0 libxrender-dev
+          apt-get update
+          apt-get install -y git ninja-build gcc-multilib g++-multilib wget
           apt-get clean
           rm -rf /var/lib/apt/lists/*
       - name: Install PyTorch
         run: |
           python -V
-          python -m pip install --upgrade pip
-          python -m pip uninstall torch torchvision -y
-          python -m pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
+          python -m pip show torch torchvision
+          python -m pip install --no-cache-dir --upgrade pip
       - name: Install dependencies
         run: |
           python -V
           export CFLAGS=`python -c 'import sysconfig;print("-I"+sysconfig.get_paths()["include"])'`
-          python -m pip install openmim
-          python -m pip install -r requirements.txt
-          python -m pip install -r requirements/backends.txt
+          python -m pip install --no-cache-dir openmim
+          python -m pip install --no-cache-dir -r requirements.txt
+          python -m pip install --no-cache-dir -r requirements/backends.txt
           python -m mim install "mmcv>=2.0.0rc1"
           CFLAGS=$CFLAGS python -m mim install -r requirements/codebases.txt
-          python -m pip install -U pycuda numpy clip numba transformers
+          python -m pip install --no-cache-dir -U pycuda numpy clip numba transformers
           python -m pip list
       - name: Build and install
         run: |
@@ -73,7 +66,7 @@ jobs:
         if: always()
         uses: RubbaBoy/BYOB@v1.2.1
         with:
-          NAME: build_cuda102
+          NAME: build_cuda111
           LABEL: 'build'
           STATUS: ${{ steps.badge_status.conclusion == 'success' && 'passing' || 'failing' }}
           COLOR: ${{ steps.badge_status.conclusion == 'success' && 'green' || 'red' }}
@@ -82,39 +75,30 @@ jobs:
   build_cuda113:
     runs-on: ubuntu-20.04
     container:
-      image: pytorch/pytorch:1.12.0-cuda11.3-cudnn8-devel
-    strategy:
-      matrix:
-        torch: [1.12.0+cu113]
-        include:
-          - torch: 1.12.0+cu113
-            torch_version: torch1.12
-            torchvision: 0.13.0+cu113
+      image: pytorch/pytorch:1.12.0-cuda11.3-cudnn8-runtime
     steps:
       - uses: actions/checkout@v2
       - name: Install system dependencies
         run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
-          apt-get update && apt-get install -y ffmpeg libsm6 libxext6 git ninja-build libglib2.0-0 libxrender-dev
+          apt-get update
+          apt-get install -y git ninja-build gcc-multilib g++-multilib wget
           apt-get clean
           rm -rf /var/lib/apt/lists/*
       - name: Install PyTorch
         run: |
           python -V
-          python -m pip install --upgrade pip
           python -m pip show torch torchvision
-          python -c 'from torchvision.extension import _assert_has_ops; _assert_has_ops()'
-          #python -m pip install torch==${{matrix.torch}} torchvision==${{matrix.torchvision}} -f https://download.pytorch.org/whl/torch_stable.html
+          python -m pip install --no-cache-dir --upgrade pip
       - name: Install dependencies
         run: |
           python -V
           export CFLAGS=`python -c 'import sysconfig;print("-I"+sysconfig.get_paths()["include"])'`
-          python -m pip install openmim
-          python -m pip install -r requirements.txt
-          python -m pip install -r requirements/backends.txt
+          python -m pip install --no-cache-dir openmim
+          python -m pip install --no-cache-dir -r requirements.txt
+          python -m pip install --no-cache-dir -r requirements/backends.txt
           python -m mim install "mmcv>=2.0.0rc1"
           python -m mim install -r requirements/codebases.txt
-          python -m pip install -U pycuda numpy clip numba transformers
+          python -m pip install --no-cache-dir -U pycuda numpy clip numba transformers
           python -m pip list
       - name: Build and install
         run: |
