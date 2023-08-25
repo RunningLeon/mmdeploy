@@ -71,6 +71,14 @@ jobs:
           python -V
           python -m pip show torch torchvision
           python -m pip install --no-cache-dir --upgrade pip
+      - name: Check disk space
+        run: |
+          df -h
+          rm -rf ${GITHUB_WORKSPACE}/.git
+          cat /proc/cpuinfo  | grep -ic proc
+          free
+          df -h
+          df . -h
       - name: Install dependencies
         run: |
           python -V
