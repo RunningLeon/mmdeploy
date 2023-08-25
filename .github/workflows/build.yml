@@ -25,6 +25,15 @@ jobs:
           python -V
           python -m pip show torch torchvision
           python -m pip install --no-cache-dir --upgrade pip
+      - name: Check disk space
+        run: |
+          df -h
+          rm -rf ${GITHUB_WORKSPACE}/.git
+          rm -rf /usr/share/dotnet
+          cat /proc/cpuinfo  | grep -ic proc
+          free
+          df -h
+          df . -h
       - name: Install dependencies
         run: |
           python -V
@@ -33,8 +42,14 @@ jobs:
           python -m pip install --no-cache-dir -r requirements/backends.txt
           python -m mim install "mmcv>=2.0.0"
           python -m pip install --no-cache-dir -r requirements/codebases.txt
-          python -m pip install --no-cache-dir -U pycuda numpy==1.23 clip numba transformers
+          python -m pip install --no-cache-dir -U pycuda numpy==1.23 clip numba transformers albumentations
           python -m pip list
+      - name: Check disk space
+        run: |
+          cat /proc/cpuinfo  | grep -ic proc
+          free
+          df -h
+          df . -h
       - name: Build and install
         run: |
           rm -rf .eggs && python -m pip install -e .
@@ -74,6 +89,7 @@ jobs:
       - name: Check disk space
         run: |
           df -h
+          rm -rf /usr/share/dotnet
           rm -rf ${GITHUB_WORKSPACE}/.git
           cat /proc/cpuinfo  | grep -ic proc
           free
@@ -87,8 +103,14 @@ jobs:
           python -m pip install --no-cache-dir -r requirements/backends.txt
           python -m mim install --no-cache-dir "mmcv>=2.0.0"
           python -m pip install --no-cache-dir -r requirements/codebases.txt
-          python -m pip install --no-cache-dir -U pycuda numpy clip numba transformers
+          python -m pip install --no-cache-dir -U pycuda numpy clip numba transformers albumentations
           python -m pip list
+      - name: Check disk space
+        run: |
+          cat /proc/cpuinfo  | grep -ic proc
+          free
+          df -h
+          df . -h
       - name: Build and install
         run: |
           rm -rf .eggs && python -m pip install -e .
