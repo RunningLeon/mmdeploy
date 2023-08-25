@@ -7,134 +7,48 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_cuda117:
+  build_cpu_model_convert:
     runs-on: ubuntu-20.04
-    container:
-      image: pytorch/pytorch:2.0.0-cuda11.7-cudnn8-devel
-    env:
-      FORCE_CUDA: 1
+    strategy:
+      matrix:
+        torch: [1.8.0, 1.9.0]
+        include:
+          - torch: 1.8.0
+            torchvision: 0.9.0
+          - torch: 1.9.0
+            torchvision: 0.10.0
     steps:
       - uses: actions/checkout@v2
-      - name: Install system dependencies
-        run: |
-          apt-get update && apt-get install -y ffmpeg libsm6 libxext6 git ninja-build libglib2.0-0 libxrender-dev
-          apt-get clean
-          rm -rf /var/lib/apt/lists/*
       - name: Install PyTorch
         run: |
+          python -m pip install --upgrade pip
           python -V
-          python -m pip show torch torchvision
-          python -m pip install --no-cache-dir --upgrade pip
-      - name: Check disk space
+          python -m pip show pip
+          python -m pip install torch==${{matrix.torch}}+cpu torchvision==${{matrix.torchvision}}+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      - name: Install unittest dependencies
         run: |
-          df -h
-          rm -rf ${GITHUB_WORKSPACE}/.git
-          rm -rf /usr/share/dotnet
-          cat /proc/cpuinfo  | grep -ic proc
-          free
-          df -h
-          df . -h
-      - name: Install dependencies
-        run: |
-          python -V
-          python -m pip install --no-cache-dir openmim
-          python -m pip install --no-cache-dir -r requirements.txt
-          python -m pip install --no-cache-dir -r requirements/backends.txt
+          python -m pip install openmim
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements/backends.txt
           python -m mim install "mmcv>=2.0.0"
-          python -m pip install --no-cache-dir -r requirements/codebases.txt
-          python -m pip install --no-cache-dir -U pycuda numpy==1.23 clip numba transformers albumentations
+          python -m mim install -r requirements/codebases.txt
+          python -m pip install clip numba transformers numpy==1.23 albumentations
           python -m pip list
-      - name: Check disk space
+      - name: Install mmyolo
         run: |
-          cat /proc/cpuinfo  | grep -ic proc
-          free
-          df -h
-          df . -h
+          git clone -b dev --depth 1 https://github.com/open-mmlab/mmyolo.git /home/runner/work/mmyolo
+          python -m pip install -v -e /home/runner/work/mmyolo
+      - name: Install mmpose
+        run: |
+          git clone --depth 1 https://github.com/open-mmlab/mmpose.git /home/runner/work/mmpose
+          python -m pip install -v -e /home/runner/work/mmpose
       - name: Build and install
         run: |
           rm -rf .eggs && python -m pip install -e .
           python tools/check_env.py
-      - name: Run unittests and generate coverage report
-        id: badge_status
+      - name: Run python unittests and generate coverage report
         run: |
+          pytest tests/test_mmcv/test_mmcv_ops.py::test_ONNXNMSop
           coverage run --branch --source mmdeploy -m pytest -rsE tests
           coverage xml
           coverage report -m
-      - name: create badge
-        if: always()
-        uses: RubbaBoy/BYOB@v1.2.1
-        with:
-          NAME: build_cuda102
-          LABEL: 'build'
-          STATUS: ${{ steps.badge_status.conclusion == 'success' && 'passing' || 'failing' }}
-          COLOR: ${{ steps.badge_status.conclusion == 'success' && 'green' || 'red' }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build_cuda113:
-    runs-on: ubuntu-20.04
-    container:
-      image: pytorch/pytorch:1.12.0-cuda11.3-cudnn8-devel
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install system dependencies
-        run: |
-          apt-get update && apt-get install -y ffmpeg libsm6 libxext6 git ninja-build libglib2.0-0 libxrender-dev
-          apt-get clean
-          rm -rf /var/lib/apt/lists/*
-      - name: Install PyTorch
-        run: |
-          python -V
-          python -m pip show torch torchvision
-          python -m pip install --no-cache-dir --upgrade pip
-      - name: Check disk space
-        run: |
-          df -h
-          rm -rf /usr/share/dotnet
-          rm -rf ${GITHUB_WORKSPACE}/.git
-          cat /proc/cpuinfo  | grep -ic proc
-          free
-          df -h
-          df . -h
-      - name: Install dependencies
-        run: |
-          python -V
-          python -m pip install --no-cache-dir openmim
-          python -m pip install --no-cache-dir -r requirements.txt
-          python -m pip install --no-cache-dir -r requirements/backends.txt
-          python -m mim install --no-cache-dir "mmcv>=2.0.0"
-          python -m pip install --no-cache-dir -r requirements/codebases.txt
-          python -m pip install --no-cache-dir -U pycuda numpy clip numba transformers albumentations
-          python -m pip list
-      - name: Check disk space
-        run: |
-          cat /proc/cpuinfo  | grep -ic proc
-          free
-          df -h
-          df . -h
-      - name: Build and install
-        run: |
-          rm -rf .eggs && python -m pip install -e .
-          python tools/check_env.py
-      - name: Run unittests and generate coverage report
-        run: |
-          coverage run --branch --source mmdeploy -m pytest -rsE tests
-          coverage xml
-          coverage report -m
-      - name: Upload coverage to Codecov
-        id: badge_status
-        uses: codecov/codecov-action@v2
-        with:
-          file: ./coverage.xml,./coverage.info
-          flags: unittests
-          env_vars: OS,PYTHON,CPLUS
-          name: codecov-umbrella
-          fail_ci_if_error: false
-      - name: create badge
-        if: always()
-        uses: RubbaBoy/BYOB@v1.2.1
-        with:
-          NAME: build_cuda113
-          LABEL: 'build'
-          STATUS: ${{ steps.badge_status.conclusion == 'success' && 'passing' || 'failing' }}
-          COLOR: ${{ steps.badge_status.conclusion == 'success' && 'green' || 'red' }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
